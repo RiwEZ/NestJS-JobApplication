@@ -6,10 +6,14 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
+import { AuthService } from './auth.service';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(private jwtService: JwtService) {}
+  constructor(
+    private jwtService: JwtService,
+    private authService: AuthService,
+  ) {}
 
   private getBearer(request: Request): string | undefined {
     const [type, token] = request.headers.authorization?.split(' ') ?? [];
@@ -21,6 +25,9 @@ export class AuthGuard implements CanActivate {
     const token = this.getBearer(request);
 
     if (!token) {
+      throw new UnauthorizedException();
+    }
+    if (!this.authService.isTokenValid(token)) {
       throw new UnauthorizedException();
     }
 

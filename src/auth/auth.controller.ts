@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Headers,
   HttpCode,
   HttpStatus,
   Logger,
@@ -21,11 +22,17 @@ export class AuthController {
 
   @HttpCode(HttpStatus.OK)
   @Post('login')
-  signIn(@Body() body: AuthCredentialsBody) {
-    // TODO, body validation
-    return this.authService.signIn(body.username, body.password);
+  login(@Body() body: AuthCredentialsBody) {
+    return this.authService.login(body.username, body.password);
   }
 
+  @HttpCode(HttpStatus.OK)
+  @Post('logout')
+  logout(@Headers('Authorization') authorization: string | undefined) {
+    return this.authService.logout(authorization);
+  }
+
+  @HttpCode(HttpStatus.OK)
   @Post('register')
   register(@Body() body: AuthCredentialsBody) {
     return this.authService.register(body);

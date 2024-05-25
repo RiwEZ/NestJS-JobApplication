@@ -1,5 +1,7 @@
 import {
+  BadRequestException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -18,12 +20,17 @@ export class AuthCredentialsBody {
 
 @Injectable()
 export class AuthService {
+  // if many users, this could be some other in memory DB
+  // and maybe we could use short live access token with refresh token
+  // but to simplify this, I think i'll went with this simpler way
+  private blacklistedJWT = new Set();
+
   constructor(
     private userService: UsersService,
     private jwtService: JwtService,
   ) {}
 
-  async signIn(
+  async login(
     username: string,
     password: string,
   ): Promise<{ accessToken: string }> {
@@ -36,12 +43,36 @@ export class AuthService {
       throw new UnauthorizedException();
     }
     const payload = { sub: user.id, name: user.username };
+    const token = await this.jwtService.signAsync(payload);
+
+    if (!this.isTokenValid(token)) {
+      throw new UnauthorizedException();
+    }
+
     return {
-      accessToken: await this.jwtService.signAsync(payload),
+      accessToken: token,
     };
   }
 
+  async logout(authorization: string | undefined) {
+    const [type, token] = authorization?.split(' ') ?? [];
+    if (type.toLowerCase() !== 'bearer') {
+      throw new BadRequestException();
+    }
+    this.blacklistedJWT.add(token);
+  }
+
+  isTokenValid(token: string): boolean {
+    if (this.blacklistedJWT.has(token)) {
+      return false;
+    }
+    return true;
+  }
+
   async register(body: AuthCredentialsBody) {
-    return this.userService.create(body.username, body.password);
+    const success = await this.userService.create(body.username, body.password);
+    if (!success) {
+      throw new InternalServerErrorException();
+    }
   }
 }

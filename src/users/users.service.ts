@@ -24,13 +24,18 @@ export class UsersService {
     };
   }
 
-  async create(username: string, password: string): Promise<{ id: string }> {
-    const hashedPassword = await bcrypt.hash(password, 12);
-    const user = new this.userModel({
-      username,
-      password: hashedPassword,
-    });
-    const result = await user.save();
-    return { id: result._id.toString() };
+  async create(username: string, password: string): Promise<boolean> {
+    try {
+      const hashedPassword = await bcrypt.hash(password, 12);
+      const user = new this.userModel({
+        username,
+        password: hashedPassword,
+      });
+      await user.save();
+
+      return true;
+    } catch {
+      return false;
+    }
   }
 }
