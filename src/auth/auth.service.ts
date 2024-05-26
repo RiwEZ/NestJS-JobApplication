@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { IsNotEmpty } from 'class-validator';
-import { UsersService } from 'src/users/users.service';
+import { CreateResult, UsersService } from 'src/users/users.service';
 import * as bcrypt from 'bcrypt';
 
 export class AuthCredentialsBody {
@@ -30,15 +30,19 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async login(
-    username: string,
-    password: string,
-  ): Promise<{ accessToken: string }> {
-    const user = await this.userService.findOne(username);
+  isTokenValid(token: string): boolean {
+    if (this.blacklistedJWT.has(token)) {
+      return false;
+    }
+    return true;
+  }
+
+  async login(body: AuthCredentialsBody): Promise<{ accessToken: string }> {
+    const user = await this.userService.findOne(body.username);
     if (user === undefined) {
       throw new NotFoundException();
     }
-    const passwordMatched = await bcrypt.compare(user.password, password);
+    const passwordMatched = await bcrypt.compare(user.password, body.password);
     if (passwordMatched) {
       throw new UnauthorizedException();
     }
@@ -59,20 +63,19 @@ export class AuthService {
     if (type.toLowerCase() !== 'bearer') {
       throw new BadRequestException();
     }
+    if (this.blacklistedJWT.has(token)) {
+      throw new BadRequestException();
+    }
     this.blacklistedJWT.add(token);
   }
 
-  isTokenValid(token: string): boolean {
-    if (this.blacklistedJWT.has(token)) {
-      return false;
-    }
-    return true;
-  }
-
   async register(body: AuthCredentialsBody) {
-    const success = await this.userService.create(body.username, body.password);
-    if (!success) {
+    const result = await this.userService.create(body.username, body.password);
+    if (result === CreateResult.Failed) {
       throw new InternalServerErrorException();
+    }
+    if (result === CreateResult.Duplicated) {
+      throw new BadRequestException('someone already use this username');
     }
   }
 }

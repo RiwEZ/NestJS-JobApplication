@@ -11,8 +11,8 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthService, AuthCredentialsBody } from './auth.service';
-import { AuthGuard } from './auth.guard';
 import { Request } from 'express';
+import { AuthGuard } from './auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -23,7 +23,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Post('login')
   login(@Body() body: AuthCredentialsBody) {
-    return this.authService.login(body.username, body.password);
+    return this.authService.login(body);
   }
 
   @HttpCode(HttpStatus.OK)
