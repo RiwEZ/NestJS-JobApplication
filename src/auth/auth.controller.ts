@@ -8,11 +8,11 @@ import {
   Logger,
   Post,
   Req,
-  UseGuards,
+  SetMetadata,
 } from '@nestjs/common';
 import { AuthService, AuthCredentialsBody } from './auth.service';
 import { Request } from 'express';
-import { AuthGuard } from './auth.guard';
+import { IS_PUBLIC_KEY } from './auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -20,6 +20,7 @@ export class AuthController {
 
   constructor(private authService: AuthService) {}
 
+  @SetMetadata(IS_PUBLIC_KEY, true)
   @HttpCode(HttpStatus.OK)
   @Post('login')
   login(@Body() body: AuthCredentialsBody) {
@@ -32,13 +33,13 @@ export class AuthController {
     return this.authService.logout(authorization);
   }
 
+  @SetMetadata(IS_PUBLIC_KEY, true)
   @HttpCode(HttpStatus.OK)
   @Post('register')
   register(@Body() body: AuthCredentialsBody) {
     return this.authService.register(body);
   }
 
-  @UseGuards(AuthGuard)
   @Get('profile')
   getProfile(@Req() req: Request) {
     // @ts-expect-error, no extended type yet

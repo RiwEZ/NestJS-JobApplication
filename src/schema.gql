@@ -11,10 +11,13 @@ type CompanyModel {
 
 type Query {
   companies: [CompanyModel!]!
+  company(name: String!): CompanyModel!
 }
 
 type Mutation {
   createCompany(companyData: CreateCompanyBody!): CompanyModel!
+  editCompany(id: String!, companyData: CreateCompanyBody!): CompanyModel!
+  deleteCompany(id: String!): CompanyModel!
 }
 
 input CreateCompanyBody {

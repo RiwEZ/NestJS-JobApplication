@@ -11,3 +11,9 @@ export class CompanyModel {
   @Field({ nullable: true })
   contactInfo: string;
 }
+
+@ObjectType()
+export class MutationStatus {
+  @Field()
+  message: string;
+}

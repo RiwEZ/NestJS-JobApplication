@@ -18,6 +18,11 @@ export class AuthCredentialsBody {
   password: string;
 }
 
+export interface TokenPayload {
+  sub: string;
+  name: string;
+}
+
 @Injectable()
 export class AuthService {
   // if many users, this could be some other in memory DB
@@ -46,7 +51,7 @@ export class AuthService {
     if (passwordMatched) {
       throw new UnauthorizedException();
     }
-    const payload = { sub: user.id, name: user.username };
+    const payload: TokenPayload = { sub: user.id, name: user.username };
     const token = await this.jwtService.signAsync(payload);
 
     if (!this.isTokenValid(token)) {

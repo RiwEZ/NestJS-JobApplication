@@ -2,21 +2,22 @@ import {
   CanActivate,
   ExecutionContext,
   Injectable,
-  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 import { AuthService } from './auth.service';
 import { GqlExecutionContext } from '@nestjs/graphql';
+import { Reflector } from '@nestjs/core';
+
+export const IS_PUBLIC_KEY = 'isPublic';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  // private readonly logger = new Logger(AuthGuard.name);
-
   constructor(
     private jwtService: JwtService,
     private authService: AuthService,
+    private reflector: Reflector,
   ) {}
 
   private getBearer(request: Request): string | undefined {
@@ -25,6 +26,15 @@ export class AuthGuard implements CanActivate {
   }
 
   async canActivate(ctx: ExecutionContext): Promise<boolean> {
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+      ctx.getHandler(),
+      ctx.getClass(),
+    ]);
+
+    if (isPublic) {
+      return true;
+    }
+
     // check if we are using graphql or normal REST
     const request =
       ctx.getType().toString() === 'graphql'
@@ -46,7 +56,7 @@ export class AuthGuard implements CanActivate {
       });
 
       // is there a better way to do this?, add type support
-      request.headers['user'] = payload;
+      request.user = payload;
     } catch {
       throw new UnauthorizedException();
     }

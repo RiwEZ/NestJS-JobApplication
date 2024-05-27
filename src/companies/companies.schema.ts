@@ -17,3 +17,5 @@ export class Company {
 }
 
 export const CompanySchema = SchemaFactory.createForClass(Company);
+
+CompanySchema.index({ _id: 1, admins: 1 });

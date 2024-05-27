@@ -1,25 +1,49 @@
-import { Args, Mutation, Resolver, Query } from '@nestjs/graphql';
+import { Args, Mutation, Resolver, Query, Context } from '@nestjs/graphql';
 import { CompaniesService, CreateCompanyBody } from './companies.service';
 import { CompanyModel } from './companies.model';
-import { UseGuards } from '@nestjs/common';
-import { AuthGuard } from 'src/auth/auth.guard';
+import { UseFilters } from '@nestjs/common';
+import { GraphQLContext, GraphQLErrFilter } from 'src/common/utils';
 
-@Resolver((of) => CompanyModel)
+@UseFilters(new GraphQLErrFilter())
+@Resolver(() => CompanyModel)
 export class CompaniesResolver {
   constructor(private companiesService: CompaniesService) {}
 
-  @UseGuards(AuthGuard)
-  @Query((returns) => [CompanyModel])
+  @Query(() => [CompanyModel])
   async companies(): Promise<CompanyModel[]> {
     return this.companiesService.getAll();
   }
 
-  @UseGuards(AuthGuard)
-  @Mutation((returns) => CompanyModel)
+  @Query(() => CompanyModel)
+  async company(
+    @Args('name', { type: () => String }) name: string,
+  ): Promise<CompanyModel> {
+    return this.companiesService.get(name);
+  }
+
+  @Mutation(() => CompanyModel)
   async createCompany(
     @Args('companyData') companyData: CreateCompanyBody,
+    @Context() ctx: GraphQLContext,
   ): Promise<CompanyModel> {
-    const result = await this.companiesService.create(companyData);
-    return result;
+    return this.companiesService.create(ctx, companyData);
+  }
+
+  @Mutation(() => CompanyModel)
+  async editCompany(
+    @Args('id', { type: () => String }) id: string,
+    @Args('companyData')
+    companyData: CreateCompanyBody,
+    @Context() ctx: GraphQLContext,
+  ): Promise<CompanyModel> {
+    return this.companiesService.edit(ctx, id, companyData);
+  }
+
+  @Mutation(() => CompanyModel)
+  async deleteCompany(
+    @Args('id', { type: () => String }) id: string,
+    @Context() ctx: GraphQLContext,
+  ): Promise<CompanyModel> {
+    return this.companiesService.delete(ctx, id);
   }
 }
