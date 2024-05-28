@@ -2,13 +2,12 @@ import { Module } from '@nestjs/common';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { MongooseModule } from '@nestjs/mongoose';
-import { JobsService } from './jobs/jobs.service';
-import { JobsController } from './jobs/jobs.controller';
 import { JobsModule } from './jobs/jobs.module';
 import { CompaniesModule } from './companies/companies.module';
 import { GraphQLModule } from '@nestjs/graphql';
 import { MercuriusDriver, MercuriusDriverConfig } from '@nestjs/mercurius';
 import { join } from 'path';
+import { ApplicantsModule } from './applicants/applicants.module';
 
 @Module({
   imports: [
@@ -22,8 +21,7 @@ import { join } from 'path';
     UsersModule,
     JobsModule,
     CompaniesModule,
+    ApplicantsModule,
   ],
-  controllers: [JobsController],
-  providers: [JobsService],
 })
 export class AppModule {}

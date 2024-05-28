@@ -11,6 +11,7 @@ export class Company {
   @Prop({ required: true })
   contactInfo: string;
   @Prop({
+    required: true,
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   })
   admins: User[];
@@ -18,4 +19,4 @@ export class Company {
 
 export const CompanySchema = SchemaFactory.createForClass(Company);
 
-CompanySchema.index({ _id: 1, admins: 1 });
+CompanySchema.index({ _id: 1, admins: 1 }, { background: true });

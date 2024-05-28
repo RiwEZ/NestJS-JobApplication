@@ -2,22 +2,53 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type JobModel {
+  id: String!
+  title: String!
+  description: String!
+  isOpen: Boolean!
+}
+
 type CompanyModel {
   id: String!
-  name: String
-  description: String
-  contactInfo: String
+  name: String!
+  description: String!
+  contactInfo: String!
+}
+
+type ApplicantModel {
+  id: String!
+  job: String!
+  user: String!
+  status: ApplicantStatus!
+}
+
+enum ApplicantStatus {
+  HIRED
+  REJECTED
+  PENDING
 }
 
 type Query {
+  jobs: [JobModel!]!
+  companiesUndercare: [CompanyModel!]!
   companies: [CompanyModel!]!
   company(name: String!): CompanyModel!
+  applicants(jobId: String!): [ApplicantModel!]!
 }
 
 type Mutation {
+  createJob(companyId: String!, jobData: CreateJobBody!): JobModel!
+  toggleJobStatus(jobId: String!): JobModel!
   createCompany(companyData: CreateCompanyBody!): CompanyModel!
   editCompany(id: String!, companyData: CreateCompanyBody!): CompanyModel!
   deleteCompany(id: String!): CompanyModel!
+}
+
+input CreateJobBody {
+  title: String!
+  description: String!
+  isOpen: Boolean!
 }
 
 input CreateCompanyBody {

@@ -9,5 +9,6 @@ import { CompaniesResolver } from './companies.resolver';
     MongooseModule.forFeature([{ name: Company.name, schema: CompanySchema }]),
   ],
   providers: [CompaniesService, CompaniesResolver],
+  exports: [CompaniesService],
 })
 export class CompaniesModule {}

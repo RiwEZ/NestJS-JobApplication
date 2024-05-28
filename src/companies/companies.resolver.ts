@@ -1,6 +1,6 @@
 import { Args, Mutation, Resolver, Query, Context } from '@nestjs/graphql';
-import { CompaniesService, CreateCompanyBody } from './companies.service';
-import { CompanyModel } from './companies.model';
+import { CompaniesService } from './companies.service';
+import { CompanyModel, CreateCompanyBody } from './companies.model';
 import { UseFilters } from '@nestjs/common';
 import { GraphQLContext, GraphQLErrFilter } from 'src/common/utils';
 
@@ -8,6 +8,13 @@ import { GraphQLContext, GraphQLErrFilter } from 'src/common/utils';
 @Resolver(() => CompanyModel)
 export class CompaniesResolver {
   constructor(private companiesService: CompaniesService) {}
+
+  @Query(() => [CompanyModel])
+  async companiesUndercare(
+    @Context() ctx: GraphQLContext,
+  ): Promise<CompanyModel[]> {
+    return this.companiesService.getAllUndercare(ctx);
+  }
 
   @Query(() => [CompanyModel])
   async companies(): Promise<CompanyModel[]> {
@@ -23,26 +30,26 @@ export class CompaniesResolver {
 
   @Mutation(() => CompanyModel)
   async createCompany(
-    @Args('companyData') companyData: CreateCompanyBody,
     @Context() ctx: GraphQLContext,
+    @Args('companyData') companyData: CreateCompanyBody,
   ): Promise<CompanyModel> {
     return this.companiesService.create(ctx, companyData);
   }
 
   @Mutation(() => CompanyModel)
   async editCompany(
+    @Context() ctx: GraphQLContext,
     @Args('id', { type: () => String }) id: string,
     @Args('companyData')
     companyData: CreateCompanyBody,
-    @Context() ctx: GraphQLContext,
   ): Promise<CompanyModel> {
     return this.companiesService.edit(ctx, id, companyData);
   }
 
   @Mutation(() => CompanyModel)
   async deleteCompany(
-    @Args('id', { type: () => String }) id: string,
     @Context() ctx: GraphQLContext,
+    @Args('id', { type: () => String }) id: string,
   ): Promise<CompanyModel> {
     return this.companiesService.delete(ctx, id);
   }

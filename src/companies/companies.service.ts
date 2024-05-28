@@ -2,28 +2,28 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Company } from './companies.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { IsNotEmpty } from 'class-validator';
-import { Field, InputType } from '@nestjs/graphql';
-import { CompanyModel } from './companies.model';
+import { CompanyModel, CreateCompanyBody } from './companies.model';
 import { GraphQLError } from 'graphql';
 import { GraphQLContext } from 'src/common/utils';
-
-@InputType()
-export class CreateCompanyBody {
-  @Field()
-  @IsNotEmpty()
-  name: string;
-  @Field()
-  description: string;
-  @Field()
-  contactInfo: string;
-}
 
 @Injectable()
 export class CompaniesService {
   private readonly logger = new Logger(CompaniesService.name);
 
   constructor(@InjectModel(Company.name) private company: Model<Company>) {}
+
+  async getAllUndercare(ctx: GraphQLContext): Promise<CompanyModel[]> {
+    const result = await this.company
+      .find({ admins: { $in: [ctx.req.user.sub] } })
+      .exec();
+
+    return result.map((r) => ({
+      id: r._id.toString(),
+      name: r.name,
+      description: r.description,
+      contactInfo: r.contactInfo,
+    }));
+  }
 
   async getAll(): Promise<CompanyModel[]> {
     const result = await this.company.find().exec();
@@ -79,22 +79,25 @@ export class CompaniesService {
   }
 
   async delete(ctx: GraphQLContext, id: string): Promise<CompanyModel> {
-    const result = await this.company
-      .findOneAndDelete({ _id: id, admins: { $in: [ctx.req.user.sub] } })
-      .exec();
+    try {
+      const result = await this.company
+        .findOneAndDelete({ _id: id, admins: { $in: [ctx.req.user.sub] } })
+        .exec();
 
-    if (result === null) {
-      throw new GraphQLError(
-        `cannot find a company with an id ${id} that you have permission to delete`,
-      );
+      if (result === null) {
+        throw new GraphQLError(
+          `cannot find a company with an id ${id} that you have permission to delete`,
+        );
+      }
+      return {
+        id: result._id.toString(),
+        name: result.name,
+        description: result.description,
+        contactInfo: result.contactInfo,
+      };
+    } catch {
+      throw new GraphQLError(`internal server error`);
     }
-
-    return {
-      id: result._id.toString(),
-      name: result.name,
-      description: result.description,
-      contactInfo: result.contactInfo,
-    };
   }
 
   async edit(
@@ -132,5 +135,18 @@ export class CompaniesService {
       description: body.description,
       contactInfo: body.contactInfo,
     };
+  }
+
+  async checkPermission(companyId: string, userId: string): Promise<boolean> {
+    const result = await this.company.findOne({
+      _id: companyId,
+      admins: { $in: [userId] },
+    });
+
+    if (result === null) {
+      return false;
+    }
+
+    return true;
   }
 }

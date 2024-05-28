@@ -4,6 +4,7 @@
 interface User {
     username: string,
     password: string,
+    info: string,
 ```
 
 ```ts 
@@ -29,6 +30,6 @@ interface Job {
 interface Applications {
     user: MongoId,
     job: MongoId,
-    status: 'hired' | 'rejected'
+    status: 'hired' | 'rejected' | 'pending'
 }
 ```
