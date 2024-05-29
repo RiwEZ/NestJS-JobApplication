@@ -2,24 +2,28 @@ import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { IsNotEmpty } from 'class-validator';
 
 @ObjectType()
-export class CompanyModel {
+export class CandidateModel {
   @Field()
   id: string;
   @Field()
-  name: string;
+  fullname: string;
   @Field()
-  description: string;
+  nickname: string;
   @Field()
   contactInfo: string;
+  @Field()
+  information: string;
 }
 
 @InputType()
-export class CreateCompanyData {
-  @Field()
+export class CreateCandidateData {
   @IsNotEmpty()
-  name: string;
   @Field()
-  description: string;
+  fullname: string;
+  @Field()
+  nickname: string;
   @Field()
   contactInfo: string;
+  @Field()
+  information: string;
 }

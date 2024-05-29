@@ -11,5 +11,6 @@ import { CompaniesModule } from 'src/companies/companies.module';
     CompaniesModule,
   ],
   providers: [JobsService, JobsResolver],
+  exports: [JobsService],
 })
 export class JobsModule {}

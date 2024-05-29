@@ -11,14 +11,16 @@ export enum ApplicantStatus {
 export class Applicant {
   @Prop({
     required: true,
-    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Job' }],
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Job',
   })
   job: string;
   @Prop({
     required: true,
-    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Candidate',
   })
-  user: string;
+  candidate: string;
   @Prop({ enum: Object.values(ApplicantStatus) })
   status: ApplicantStatus;
 }

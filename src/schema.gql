@@ -19,7 +19,7 @@ type CompanyModel {
 type ApplicantModel {
   id: String!
   job: String!
-  user: String!
+  candidate: String!
   status: ApplicantStatus!
 }
 
@@ -29,21 +29,35 @@ enum ApplicantStatus {
   PENDING
 }
 
+type CandidateModel {
+  id: String!
+  fullname: String!
+  nickname: String!
+  contactInfo: String!
+  information: String!
+}
+
 type Query {
   jobs(isOpen: Boolean! = true): [JobModel!]!
   companies: [CompanyModel!]!
-  companiesUnderCare: [CompanyModel!]!
+  companyUnderCare: [CompanyModel!]!
   company(name: String!): CompanyModel!
   applicants(jobId: String!): [ApplicantModel!]!
+  candidates: [CandidateModel!]!
+  candidateProfile: CandidateModel!
 }
 
 type Mutation {
   deleteJob(jobId: String!): JobModel!
   createJob(companyId: String!, jobData: CreateJobBody!): JobModel!
   toggleJobStatus(jobId: String!): JobModel!
-  createCompany(companyData: CreateCompanyBody!): CompanyModel!
-  editCompany(companyData: CreateCompanyBody!): CompanyModel!
+  createCompany(data: CreateCompanyData!): CompanyModel!
+  editCompany(data: CreateCompanyData!): CompanyModel!
   deleteCompany: CompanyModel!
+  hire(id: String!): ApplicantModel!
+  reject(id: String!): ApplicantModel!
+  applyTo(jobId: String!): ApplicantModel!
+  registerCandidate(data: CreateCandidateData!): CandidateModel!
 }
 
 input CreateJobBody {
@@ -52,8 +66,15 @@ input CreateJobBody {
   isOpen: Boolean!
 }
 
-input CreateCompanyBody {
+input CreateCompanyData {
   name: String!
   description: String!
   contactInfo: String!
+}
+
+input CreateCandidateData {
+  fullname: String!
+  nickname: String!
+  contactInfo: String!
+  information: String!
 }

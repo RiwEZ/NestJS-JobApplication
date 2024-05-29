@@ -1,6 +1,6 @@
 import { Args, Mutation, Resolver, Query, Context } from '@nestjs/graphql';
 import { CompaniesService } from './companies.service';
-import { CompanyModel, CreateCompanyBody } from './companies.model';
+import { CompanyModel, CreateCompanyData } from './companies.model';
 import { UseFilters } from '@nestjs/common';
 import { GraphQLContext, GraphQLErrFilter } from 'src/common/utils';
 import { Company } from 'src/auth/auth.guard';
@@ -16,11 +16,11 @@ export class CompaniesResolver {
   }
 
   @Company()
-  @Query(() => [CompanyModel])
-  async companiesUnderCare(
+  @Query(() => CompanyModel)
+  async companyUndercare(
     @Context() ctx: GraphQLContext,
-  ): Promise<CompanyModel[]> {
-    return this.companiesService.getAll(ctx.req.user.sub);
+  ): Promise<CompanyModel> {
+    return this.companiesService.getUndercare(ctx.req.user.sub);
   }
 
   @Query(() => CompanyModel)
@@ -32,21 +32,21 @@ export class CompaniesResolver {
 
   @Company()
   @Mutation(() => CompanyModel)
-  async createCompany(
+  async registerCompany(
     @Context() ctx: GraphQLContext,
-    @Args('companyData') companyData: CreateCompanyBody,
+    @Args('data') data: CreateCompanyData,
   ): Promise<CompanyModel> {
-    return this.companiesService.create(ctx.req.user.sub, companyData);
+    return this.companiesService.register(ctx.req.user.sub, data);
   }
 
   @Company()
   @Mutation(() => CompanyModel)
   async editCompany(
     @Context() ctx: GraphQLContext,
-    @Args('companyData')
-    companyData: CreateCompanyBody,
+    @Args('data')
+    data: CreateCompanyData,
   ): Promise<CompanyModel> {
-    return this.companiesService.edit(ctx.req.user.sub, companyData);
+    return this.companiesService.edit(ctx.req.user.sub, data);
   }
 
   @Company()

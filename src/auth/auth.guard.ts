@@ -11,11 +11,13 @@ import { AuthService } from './auth.service';
 import { GqlExecutionContext } from '@nestjs/graphql';
 import { Reflector } from '@nestjs/core';
 import { UsersService } from 'src/users/users.service';
+import { UserKind } from 'src/users/users.schema';
 
 export const IS_PUBLIC_KEY = 'isPublic';
 export const ROLES_KEY = 'roles';
 
-export const Company = () => SetMetadata(ROLES_KEY, 'company');
+export const Company = () => SetMetadata(ROLES_KEY, UserKind.COMPANY);
+export const Candidate = () => SetMetadata(ROLES_KEY, UserKind.CANDIDATE);
 
 @Injectable()
 export class AuthGuard implements CanActivate {

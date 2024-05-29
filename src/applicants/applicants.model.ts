@@ -15,7 +15,7 @@ export class ApplicantModel {
   @Field()
   job: string;
   @Field()
-  user: string;
+  candidate: string;
   @Field(() => ApplicantStatus)
   status: ApplicantStatus;
 }

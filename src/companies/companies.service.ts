@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Company } from './companies.schema';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { CompanyModel, CreateCompanyBody } from './companies.model';
+import { Model, Types } from 'mongoose';
+import { CompanyModel, CreateCompanyData } from './companies.model';
 import { GraphQLError } from 'graphql';
 
 @Injectable()
@@ -11,15 +11,30 @@ export class CompaniesService {
 
   constructor(@InjectModel(Company.name) private company: Model<Company>) {}
 
-  async getAll(userId: string | null = null): Promise<CompanyModel[]> {
-    const query = userId === null ? {} : { owner: userId };
-    const result = await this.company.find(query).exec();
-    return result.map((item) => ({
-      id: item._id.toString(),
-      name: item.name,
-      description: item.description,
-      contactInfo: item.contactInfo,
-    }));
+  toModel(data: Company & { _id: Types.ObjectId }): CompanyModel {
+    return {
+      id: data._id.toString(),
+      name: data.name,
+      description: data.description,
+      contactInfo: data.contactInfo,
+    };
+  }
+
+  async getAll(): Promise<CompanyModel[]> {
+    const result = await this.company.find().exec();
+    return result.map((item) => this.toModel(item));
+  }
+
+  async getUndercare(userId: string): Promise<CompanyModel> {
+    const result = await this.company.findOne({ owner: userId }).exec();
+
+    if (result === null) {
+      throw new GraphQLError(
+        'you did not register a company on this account yet',
+      );
+    }
+
+    return this.toModel(result);
   }
 
   async get(name: string): Promise<CompanyModel> {
@@ -36,13 +51,13 @@ export class CompaniesService {
     };
   }
 
-  async create(id: string, body: CreateCompanyBody): Promise<CompanyModel> {
+  async register(id: string, data: CreateCompanyData): Promise<CompanyModel> {
     try {
       const company = new this.company({
         owner: id,
-        name: body.name,
-        description: body.description,
-        contactInfo: body.contactInfo,
+        name: data.name,
+        description: data.description,
+        contactInfo: data.contactInfo,
         isDeleted: false,
       });
       await company.save();
@@ -54,10 +69,10 @@ export class CompaniesService {
         contactInfo: company.contactInfo,
       };
     } catch (err) {
-      this.logger.log(`${JSON.stringify(err)}`);
-      // check for mongo DuplicateKey error, for duplicated company name
       if (err.code && err.code === 11000) {
-        throw new GraphQLError('duplicated company name');
+        throw new GraphQLError(
+          'you have already create a company with this account',
+        );
       }
       throw new GraphQLError('internal server error');
     }
@@ -83,15 +98,15 @@ export class CompaniesService {
     }
   }
 
-  async edit(id: string, body: CreateCompanyBody): Promise<CompanyModel> {
+  async edit(id: string, data: CreateCompanyData): Promise<CompanyModel> {
     try {
       const result = await this.company
         .findOneAndUpdate(
           { _id: id },
           {
-            name: body.name,
-            description: body.description,
-            contactInfo: body.contactInfo,
+            name: data.name,
+            description: data.description,
+            contactInfo: data.contactInfo,
           },
         )
         .exec();
@@ -104,9 +119,9 @@ export class CompaniesService {
 
       return {
         id,
-        name: body.name,
-        description: body.description,
-        contactInfo: body.contactInfo,
+        name: data.name,
+        description: data.description,
+        contactInfo: data.contactInfo,
       };
     } catch (err) {
       if (err.code && err.code === 11000) {
