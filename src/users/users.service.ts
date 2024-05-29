@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { User } from './users.schema';
+import { User, UserKind } from './users.schema';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 
@@ -14,29 +14,36 @@ export enum CreateResult {
 export class UsersService {
   constructor(@InjectModel(User.name) private user: Model<User>) {}
 
-  async findOne(
-    username: string,
-  ): Promise<{ id: string; username: string; password: string } | undefined> {
-    // this could lead to a bug, should be findMany
-    const result = await this.user.findOne({ username: username }).exec();
+  async findOne(username: string): Promise<(User & { id: string }) | null> {
+    try {
+      const result = await this.user.findOne({ username }).exec();
 
-    if (result === null) {
-      return undefined;
+      if (result === null) {
+        return null;
+      }
+
+      return {
+        id: result._id.toString(),
+        username: result.username,
+        password: result.password,
+        kind: result.kind,
+      };
+    } catch {
+      throw new InternalServerErrorException();
     }
-
-    return {
-      id: result._id.toString(),
-      username: result.username,
-      password: result.password,
-    };
   }
 
-  async create(username: string, password: string): Promise<CreateResult> {
+  async create(
+    username: string,
+    password: string,
+    kind: UserKind,
+  ): Promise<CreateResult> {
     try {
       const hashedPassword = await bcrypt.hash(password, 12);
       const user = new this.user({
         username,
         password: hashedPassword,
+        kind,
       });
       await user.save();
       return CreateResult.Success;

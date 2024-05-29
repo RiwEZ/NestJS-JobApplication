@@ -11,7 +11,8 @@ export class Job {
   isOpen: boolean;
   @Prop({
     required: true,
-    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Companay' }],
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Companay',
   })
   company: string;
 }

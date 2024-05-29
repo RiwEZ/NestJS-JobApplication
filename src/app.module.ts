@@ -8,6 +8,7 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { MercuriusDriver, MercuriusDriverConfig } from '@nestjs/mercurius';
 import { join } from 'path';
 import { ApplicantsModule } from './applicants/applicants.module';
+import { CandidatesModule } from './candidates/candidates.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { ApplicantsModule } from './applicants/applicants.module';
     JobsModule,
     CompaniesModule,
     ApplicantsModule,
+    CandidatesModule,
   ],
 })
 export class AppModule {}

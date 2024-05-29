@@ -4,7 +4,6 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CompanyModel, CreateCompanyBody } from './companies.model';
 import { GraphQLError } from 'graphql';
-import { GraphQLContext } from 'src/common/utils';
 
 @Injectable()
 export class CompaniesService {
@@ -12,26 +11,14 @@ export class CompaniesService {
 
   constructor(@InjectModel(Company.name) private company: Model<Company>) {}
 
-  async getAllUndercare(ctx: GraphQLContext): Promise<CompanyModel[]> {
-    const result = await this.company
-      .find({ admins: { $in: [ctx.req.user.sub] } })
-      .exec();
-
-    return result.map((r) => ({
-      id: r._id.toString(),
-      name: r.name,
-      description: r.description,
-      contactInfo: r.contactInfo,
-    }));
-  }
-
-  async getAll(): Promise<CompanyModel[]> {
-    const result = await this.company.find().exec();
-    return result.map((r) => ({
-      id: r._id.toString(),
-      name: r.name,
-      description: r.description,
-      contactInfo: r.contactInfo,
+  async getAll(userId: string | null = null): Promise<CompanyModel[]> {
+    const query = userId === null ? {} : { owner: userId };
+    const result = await this.company.find(query).exec();
+    return result.map((item) => ({
+      id: item._id.toString(),
+      name: item.name,
+      description: item.description,
+      contactInfo: item.contactInfo,
     }));
   }
 
@@ -49,16 +36,14 @@ export class CompaniesService {
     };
   }
 
-  async create(
-    ctx: GraphQLContext,
-    body: CreateCompanyBody,
-  ): Promise<CompanyModel> {
+  async create(id: string, body: CreateCompanyBody): Promise<CompanyModel> {
     try {
       const company = new this.company({
+        owner: id,
         name: body.name,
         description: body.description,
         contactInfo: body.contactInfo,
-        admins: [ctx.req.user.sub],
+        isDeleted: false,
       });
       await company.save();
 
@@ -78,11 +63,9 @@ export class CompaniesService {
     }
   }
 
-  async delete(ctx: GraphQLContext, id: string): Promise<CompanyModel> {
+  async delete(id: string): Promise<CompanyModel> {
     try {
-      const result = await this.company
-        .findOneAndDelete({ _id: id, admins: { $in: [ctx.req.user.sub] } })
-        .exec();
+      const result = await this.company.findOneAndDelete({ _id: id }).exec();
 
       if (result === null) {
         throw new GraphQLError(
@@ -100,15 +83,11 @@ export class CompaniesService {
     }
   }
 
-  async edit(
-    ctx: GraphQLContext,
-    id: string,
-    body: CreateCompanyBody,
-  ): Promise<CompanyModel> {
+  async edit(id: string, body: CreateCompanyBody): Promise<CompanyModel> {
     try {
       const result = await this.company
-        .updateOne(
-          { _id: id, admins: { $in: [ctx.req.user.sub] } },
+        .findOneAndUpdate(
+          { _id: id },
           {
             name: body.name,
             description: body.description,
@@ -117,30 +96,30 @@ export class CompaniesService {
         )
         .exec();
 
-      if (result.modifiedCount != 1) {
+      if (result === null) {
         throw new GraphQLError(
           `cannot find a company with an id ${id} that you have permission to edit`,
         );
       }
+
+      return {
+        id,
+        name: body.name,
+        description: body.description,
+        contactInfo: body.contactInfo,
+      };
     } catch (err) {
       if (err.code && err.code === 11000) {
         throw new GraphQLError(`duplicated company name`);
       }
       throw new GraphQLError(`internal server error`);
     }
-
-    return {
-      id,
-      name: body.name,
-      description: body.description,
-      contactInfo: body.contactInfo,
-    };
   }
 
   async checkPermission(companyId: string, userId: string): Promise<boolean> {
     const result = await this.company.findOne({
+      owner: userId,
       _id: companyId,
-      admins: { $in: [userId] },
     });
 
     if (result === null) {

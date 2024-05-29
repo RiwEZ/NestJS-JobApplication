@@ -1,21 +1,41 @@
 
+We have 2 side of user
+1. Normal user who is looking for jobs
+2. Company user who is looking to hired
 
+
+## Normal User
 ```ts
-interface User {
+interface UserAuth {
+    _id;
     username: string,
     password: string,
-    info: string,
 ```
-
-```ts 
-interface Company {
-    name: string,
-    description: string,
-    contactInfo: string,
-    admins: MongoId[]
+```ts
+interface UserInfo {
+    info: string
+    owner: CompanyAuthId
 }
 ```
 
+## Company User
+```ts 
+interface CompanyAuth {
+    _id;
+    username: string,
+    password: string,
+```
+
+```ts
+interface CompanyInfo {
+    name: string,
+    description: string,
+    contactInfo: string,
+    owner: CompanyAuthId
+}
+```
+
+## Job 
 ```ts
 interface Job {
     _id: MongoId,
@@ -26,6 +46,7 @@ interface Job {
 }
 ```
 
+## Applicant
 ```ts
 interface Applications {
     user: MongoId,

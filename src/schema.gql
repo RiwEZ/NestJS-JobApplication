@@ -30,19 +30,20 @@ enum ApplicantStatus {
 }
 
 type Query {
-  jobs: [JobModel!]!
-  companiesUndercare: [CompanyModel!]!
+  jobs(isOpen: Boolean! = true): [JobModel!]!
   companies: [CompanyModel!]!
+  companiesUnderCare: [CompanyModel!]!
   company(name: String!): CompanyModel!
   applicants(jobId: String!): [ApplicantModel!]!
 }
 
 type Mutation {
+  deleteJob(jobId: String!): JobModel!
   createJob(companyId: String!, jobData: CreateJobBody!): JobModel!
   toggleJobStatus(jobId: String!): JobModel!
   createCompany(companyData: CreateCompanyBody!): CompanyModel!
-  editCompany(id: String!, companyData: CreateCompanyBody!): CompanyModel!
-  deleteCompany(id: String!): CompanyModel!
+  editCompany(companyData: CreateCompanyBody!): CompanyModel!
+  deleteCompany: CompanyModel!
 }
 
 input CreateJobBody {

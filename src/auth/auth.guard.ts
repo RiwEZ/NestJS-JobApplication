@@ -2,6 +2,7 @@ import {
   CanActivate,
   ExecutionContext,
   Injectable,
+  SetMetadata,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -9,20 +10,37 @@ import { Request } from 'express';
 import { AuthService } from './auth.service';
 import { GqlExecutionContext } from '@nestjs/graphql';
 import { Reflector } from '@nestjs/core';
+import { UsersService } from 'src/users/users.service';
 
 export const IS_PUBLIC_KEY = 'isPublic';
+export const ROLES_KEY = 'roles';
+
+export const Company = () => SetMetadata(ROLES_KEY, 'company');
 
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
     private jwtService: JwtService,
     private authService: AuthService,
+    private userService: UsersService,
     private reflector: Reflector,
   ) {}
 
   private getBearer(request: Request): string | undefined {
     const [type, token] = request.headers.authorization?.split(' ') ?? [];
     return type === 'Bearer' ? token : undefined;
+  }
+
+  // this should be cached, or not the request will be slow
+  private async matchRole(username: string, role: string): Promise<boolean> {
+    const result = await this.userService.findOne(username);
+    if (result === null) {
+      return false;
+    }
+    if (result.kind.toString() !== role) {
+      return false;
+    }
+    return true;
   }
 
   async canActivate(ctx: ExecutionContext): Promise<boolean> {
@@ -57,10 +75,15 @@ export class AuthGuard implements CanActivate {
 
       // is there a better way to do this?, add type support
       request.user = payload;
+
+      const role = this.reflector.get(ROLES_KEY, ctx.getHandler());
+      if (!role) {
+        return true;
+      }
+
+      return this.matchRole(payload.name, role);
     } catch {
       throw new UnauthorizedException();
     }
-
-    return true;
   }
 }

@@ -6,9 +6,10 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { IsNotEmpty } from 'class-validator';
+import { IsEnum, IsNotEmpty } from 'class-validator';
 import { CreateResult, UsersService } from 'src/users/users.service';
 import * as bcrypt from 'bcrypt';
+import { UserKind } from 'src/users/users.schema';
 
 export class AuthCredentialsBody {
   @IsNotEmpty()
@@ -16,6 +17,11 @@ export class AuthCredentialsBody {
 
   @IsNotEmpty()
   password: string;
+}
+
+export class RegisterAuthCredentialsBody extends AuthCredentialsBody {
+  @IsEnum(UserKind)
+  kind: UserKind;
 }
 
 export interface TokenPayload {
@@ -74,8 +80,12 @@ export class AuthService {
     this.blacklistedJWT.add(token);
   }
 
-  async register(body: AuthCredentialsBody) {
-    const result = await this.userService.create(body.username, body.password);
+  async register(body: RegisterAuthCredentialsBody) {
+    const result = await this.userService.create(
+      body.username,
+      body.password,
+      body.kind,
+    );
     if (result === CreateResult.Failed) {
       throw new InternalServerErrorException();
     }

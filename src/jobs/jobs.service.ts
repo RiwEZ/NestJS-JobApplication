@@ -13,13 +13,13 @@ export class JobsService {
     private companiesService: CompaniesService,
   ) {}
 
-  async getAll(): Promise<JobModel[]> {
-    const result = await this.job.find().exec();
-    return result.map((r) => ({
-      id: r._id.toString(),
-      title: r.title,
-      description: r.description,
-      isOpen: r.isOpen,
+  async getAll(isOpen: boolean): Promise<JobModel[]> {
+    const result = await this.job.find({ isOpen }).exec();
+    return result.map((item) => ({
+      id: item._id.toString(),
+      title: item.title,
+      description: item.description,
+      isOpen: item.isOpen,
     }));
   }
 
@@ -54,6 +54,34 @@ export class JobsService {
     }
   }
 
+  async delete(userId: string, id: string): Promise<JobModel> {
+    const hasPermission = await this.companiesService.checkPermission(
+      id,
+      userId,
+    );
+    if (!hasPermission) {
+      throw new GraphQLError(
+        `you don't have permission to toggle status for this job`,
+      );
+    }
+
+    try {
+      const result = await this.job.findOneAndDelete({ _id: id }).exec();
+
+      if (result === null) {
+        throw new GraphQLError(
+          `cannot find a job with an id ${id} that you have permission to delete`,
+        );
+      }
+      return {
+        id: result._id.toString(),
+        ...result,
+      };
+    } catch {
+      throw new GraphQLError(`internal server error`);
+    }
+  }
+
   async toggleStatus(userId: string, jobId: string): Promise<JobModel> {
     const result = await this.job.findOne({ _id: jobId }).exec();
 
@@ -61,7 +89,11 @@ export class JobsService {
       throw new GraphQLError(`job with and id ${jobId} is not founded`);
     }
 
-    if (!this.companiesService.checkPermission(result.company, userId)) {
+    const hasPermission = await this.companiesService.checkPermission(
+      result._id.toString(),
+      userId,
+    );
+    if (!hasPermission) {
       throw new GraphQLError(
         `you don't have permission to toggle status for this job`,
       );
@@ -73,7 +105,7 @@ export class JobsService {
         id: result._id.toString(),
         title: result.title,
         description: result.description,
-        isOpen: !result.isOpen,
+        isOpen: result.isOpen,
       };
     } catch {
       throw new GraphQLError('internal server error');
