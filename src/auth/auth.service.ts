@@ -53,8 +53,8 @@ export class AuthService {
     if (user === undefined) {
       throw new NotFoundException();
     }
-    const passwordMatched = await bcrypt.compare(user.password, body.password);
-    if (passwordMatched) {
+    const passwordMatched = await bcrypt.compare(body.password, user.password);
+    if (!passwordMatched) {
       throw new UnauthorizedException();
     }
     const payload: TokenPayload = { sub: user.id, name: user.username };

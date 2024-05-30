@@ -12,6 +12,7 @@ import { GqlExecutionContext } from '@nestjs/graphql';
 import { Reflector } from '@nestjs/core';
 import { UsersService } from 'src/users/users.service';
 import { UserKind } from 'src/users/users.schema';
+import { ConfigService } from '@nestjs/config';
 
 export const IS_PUBLIC_KEY = 'isPublic';
 export const ROLES_KEY = 'roles';
@@ -25,6 +26,7 @@ export class AuthGuard implements CanActivate {
     private jwtService: JwtService,
     private authService: AuthService,
     private userService: UsersService,
+    private configService: ConfigService,
     private reflector: Reflector,
   ) {}
 
@@ -72,7 +74,7 @@ export class AuthGuard implements CanActivate {
 
     try {
       const payload = await this.jwtService.verifyAsync(token, {
-        secret: 'DO NOT USE THIS ON PROD',
+        secret: this.configService.get('JWT_SECRET'),
       });
 
       // is there a better way to do this?, add type support
