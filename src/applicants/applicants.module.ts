@@ -5,7 +5,7 @@ import { Applicant, ApplicantSchema } from './applicants.schema';
 import { ApplicantsResolver } from './applicants.resolver';
 import { CandidatesModule } from 'src/candidates/candidates.module';
 import { JobsModule } from 'src/jobs/jobs.module';
-import { CompaniesService } from 'src/companies/companies.service';
+import { CompaniesModule } from 'src/companies/companies.module';
 
 @Module({
   imports: [
@@ -14,7 +14,7 @@ import { CompaniesService } from 'src/companies/companies.service';
     ]),
     CandidatesModule,
     JobsModule,
-    CompaniesService,
+    CompaniesModule,
   ],
   providers: [ApplicantsService, ApplicantsResolver],
 })

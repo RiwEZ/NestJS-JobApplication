@@ -21,7 +21,15 @@ export class CandidatesService {
     };
   }
 
-  async get(userId: string): Promise<CandidateModel> {
+  async get(id: string): Promise<CandidateModel> {
+    const result = await this.candidate.findOne({ _id: id }).exec();
+    if (result === null) {
+      throw new GraphQLError(`cannot find candidate with this id ${id}`);
+    }
+    return this.toModel(result);
+  }
+
+  async getByUserId(userId: string): Promise<CandidateModel> {
     const result = await this.candidate.findOne({ owner: userId }).exec();
 
     if (result === null) {

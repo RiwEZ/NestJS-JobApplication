@@ -5,6 +5,7 @@ import { Model, Types } from 'mongoose';
 import { CreateJobBody, JobModel } from './jobs.model';
 import { GraphQLError } from 'graphql';
 import { CompaniesService } from 'src/companies/companies.service';
+import { CompanyModel } from 'src/companies/companies.model';
 
 @Injectable()
 export class JobsService {
@@ -22,6 +23,20 @@ export class JobsService {
     };
   }
 
+  async getJobsOf(companyId: string): Promise<JobModel[]> {
+    const result = await this.job.find({ company: companyId }).exec();
+    return result.map(this.toModel);
+  }
+
+  async getCompanyOf(id: string): Promise<CompanyModel> {
+    const result = await this.job.findOne({ _id: id }).exec();
+    if (result === null) {
+      throw new GraphQLError('this job does not exist');
+    }
+
+    return this.companiesService.get(result.company);
+  }
+
   async get(id: string): Promise<JobModel> {
     const result = await this.job.findOne({ _id: id }).exec();
 
@@ -34,26 +49,21 @@ export class JobsService {
 
   async getAll(isOpen: boolean): Promise<JobModel[]> {
     const result = await this.job.find({ isOpen }).exec();
-    return result.map((item) => this.toModel(item));
+    return result.map(this.toModel);
   }
 
   async create(
     userId: string,
-    companyId: string,
     { title, description, isOpen }: CreateJobBody,
   ): Promise<JobModel> {
-    if (!this.companiesService.checkPermission(companyId, userId)) {
-      throw new GraphQLError(
-        `you don't have permission to create a job for this company`,
-      );
-    }
+    const company = await this.companiesService.getUndercare(userId);
 
     try {
       const job = new this.job({
         title,
         description,
         isOpen,
-        company: companyId,
+        company: company.id,
       });
       await job.save();
 

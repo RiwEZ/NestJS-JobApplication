@@ -6,6 +6,7 @@ import { Model, Types } from 'mongoose';
 import { CandidatesService } from 'src/candidates/candidates.service';
 import { GraphQLError } from 'graphql';
 import { JobsService } from 'src/jobs/jobs.service';
+import { CandidateModel } from 'src/candidates/candidates.model';
 import { CompaniesService } from 'src/companies/companies.service';
 
 @Injectable()
@@ -23,23 +24,30 @@ export class ApplicantsService {
     return {
       id: data._id.toString(),
       job: data.job,
-      candidate: data.candidate,
       status: data.status,
     };
   }
 
   async get(userId: string, jobId: string): Promise<ApplicantModel[]> {
-    // TODO, only the user who created the company who own the job should be able to view list
-    // of applicants
-    await this.companiesService.getUndercare(userId);
-
+    const userCompany = await this.companiesService.getUndercare(userId);
+    const jobCompany = await this.jobsService.getCompanyOf(jobId);
+    if (userCompany.id !== jobCompany.id) {
+      throw new GraphQLError(
+        `you don't have permission to check the list of applicants of this job`,
+      );
+    }
     const result = await this.applicant.find({ job: jobId }).exec();
     return result.map((item) => this.toModel(item));
   }
 
+  async getCandidate(id: string): Promise<CandidateModel> {
+    const result = await this.applicant.findOne({ _id: id }).exec();
+    return this.candidatesService.get(result.candidate);
+  }
+
   async create(userId: string, jobId: string): Promise<ApplicantModel> {
     // check if candidate & job exist or not
-    const candidate = await this.candidatesService.get(userId);
+    const candidate = await this.candidatesService.getByUserId(userId);
     await this.jobsService.get(jobId);
 
     try {
@@ -73,7 +81,6 @@ export class ApplicantsService {
       return {
         id: result._id.toString(),
         job: result.job,
-        candidate: result.candidate,
         status,
       };
     } catch {

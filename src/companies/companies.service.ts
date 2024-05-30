@@ -37,18 +37,20 @@ export class CompaniesService {
     return this.toModel(result);
   }
 
-  async get(name: string): Promise<CompanyModel> {
+  async get(id: string): Promise<CompanyModel> {
+    const result = await this.company.findOne({ _id: id }).exec();
+    if (result === null) {
+      throw new GraphQLError(`cannot find a company with id ${id}`);
+    }
+    return this.toModel(result);
+  }
+
+  async getByName(name: string): Promise<CompanyModel> {
     const result = await this.company.findOne({ name }).exec();
     if (result === null) {
       throw new GraphQLError(`cannot find a company with name ${name}`);
     }
-
-    return {
-      id: result._id.toString(),
-      name: result.name,
-      description: result.description,
-      contactInfo: result.contactInfo,
-    };
+    return this.toModel(result);
   }
 
   async register(id: string, data: CreateCompanyData): Promise<CompanyModel> {
@@ -62,12 +64,7 @@ export class CompaniesService {
       });
       await company.save();
 
-      return {
-        id: company._id.toString(),
-        name: company.name,
-        description: company.description,
-        contactInfo: company.contactInfo,
-      };
+      return this.toModel(company);
     } catch (err) {
       if (err.code && err.code === 11000) {
         throw new GraphQLError(

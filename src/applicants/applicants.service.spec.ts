@@ -12,7 +12,8 @@ describe('ApplicantsService', () => {
     service = module.get<ApplicantsService>(ApplicantsService);
   });
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
+  it('TODO', () => {
+    service;
+    fail();
   });
 });

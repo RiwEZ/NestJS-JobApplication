@@ -2,31 +2,20 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
-type JobModel {
-  id: String!
-  title: String!
-  description: String!
-  isOpen: Boolean!
-}
-
 type CompanyModel {
   id: String!
   name: String!
   description: String!
   contactInfo: String!
+  jobs: [JobModel!]
 }
 
-type ApplicantModel {
+type JobModel {
   id: String!
-  job: String!
-  candidate: String!
-  status: ApplicantStatus!
-}
-
-enum ApplicantStatus {
-  HIRED
-  REJECTED
-  PENDING
+  title: String!
+  description: String!
+  isOpen: Boolean!
+  company: CompanyModel
 }
 
 type CandidateModel {
@@ -37,11 +26,24 @@ type CandidateModel {
   information: String!
 }
 
+type ApplicantModel {
+  id: String!
+  job: String!
+  candidate: CandidateModel
+  status: ApplicantStatus!
+}
+
+enum ApplicantStatus {
+  HIRED
+  REJECTED
+  PENDING
+}
+
 type Query {
   jobs(isOpen: Boolean! = true): [JobModel!]!
   companies: [CompanyModel!]!
-  companyUnderCare: [CompanyModel!]!
   company(name: String!): CompanyModel!
+  companyUndercare: CompanyModel!
   applicants(jobId: String!): [ApplicantModel!]!
   candidates: [CandidateModel!]!
   candidateProfile: CandidateModel!
@@ -49,9 +51,9 @@ type Query {
 
 type Mutation {
   deleteJob(jobId: String!): JobModel!
-  createJob(companyId: String!, jobData: CreateJobBody!): JobModel!
+  createJob(jobData: CreateJobBody!): JobModel!
   toggleJobStatus(jobId: String!): JobModel!
-  createCompany(data: CreateCompanyData!): CompanyModel!
+  registerCompany(data: CreateCompanyData!): CompanyModel!
   editCompany(data: CreateCompanyData!): CompanyModel!
   deleteCompany: CompanyModel!
   hire(id: String!): ApplicantModel!

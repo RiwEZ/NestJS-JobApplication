@@ -18,7 +18,7 @@ export class CandidatesResolver {
   @Candidate()
   @Query(() => CandidateModel)
   candidateProfile(@Context() ctx: GraphQLContext): Promise<CandidateModel> {
-    return this.candidatesService.get(ctx.req.user.sub);
+    return this.candidatesService.getByUserId(ctx.req.user.sub);
   }
 
   @Candidate()

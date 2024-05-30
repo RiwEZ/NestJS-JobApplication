@@ -1,9 +1,18 @@
-import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
+import {
+  Args,
+  Context,
+  Mutation,
+  Parent,
+  Query,
+  ResolveField,
+  Resolver,
+} from '@nestjs/graphql';
 import { UseFilters } from '@nestjs/common';
 import { GraphQLContext, GraphQLErrFilter } from 'src/common/utils';
 import { CreateJobBody, JobModel } from './jobs.model';
 import { JobsService } from './jobs.service';
 import { Company } from 'src/auth/auth.guard';
+import { CompanyModel } from 'src/companies/companies.model';
 
 @UseFilters(new GraphQLErrFilter())
 @Resolver(() => JobModel)
@@ -15,6 +24,11 @@ export class JobsResolver {
     @Args('isOpen', { defaultValue: true }) isOpen: boolean,
   ): Promise<JobModel[]> {
     return this.jobsService.getAll(isOpen);
+  }
+
+  @ResolveField()
+  async company(@Parent() job: JobModel): Promise<CompanyModel> {
+    return this.jobsService.getCompanyOf(job.id);
   }
 
   @Company()
@@ -30,10 +44,9 @@ export class JobsResolver {
   @Mutation(() => JobModel)
   async createJob(
     @Context() ctx: GraphQLContext,
-    @Args('companyId') companyId: string,
     @Args('jobData') jobData: CreateJobBody,
   ): Promise<JobModel> {
-    return this.jobsService.create(ctx.req.user.sub, companyId, jobData);
+    return this.jobsService.create(ctx.req.user.sub, jobData);
   }
 
   @Company()

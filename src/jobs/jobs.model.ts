@@ -1,4 +1,5 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { CompanyModel } from 'src/companies/companies.model';
 
 @ObjectType()
 export class JobModel {
@@ -10,6 +11,8 @@ export class JobModel {
   description: string;
   @Field()
   isOpen: boolean;
+  @Field(() => CompanyModel, { nullable: true })
+  company?: CompanyModel;
 }
 
 @InputType()

@@ -5,6 +5,7 @@ import {
   registerEnumType,
 } from '@nestjs/graphql';
 import { ApplicantStatus } from './applicants.schema';
+import { CandidateModel } from 'src/candidates/candidates.model';
 
 registerEnumType(ApplicantStatus, { name: 'ApplicantStatus' });
 
@@ -14,8 +15,8 @@ export class ApplicantModel {
   id: string;
   @Field()
   job: string;
-  @Field()
-  candidate: string;
+  @Field(() => CandidateModel, { nullable: true })
+  candidate?: CandidateModel;
   @Field(() => ApplicantStatus)
   status: ApplicantStatus;
 }
