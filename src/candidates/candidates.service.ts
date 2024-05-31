@@ -39,11 +39,6 @@ export class CandidatesService {
     return this.toModel(result);
   }
 
-  async getAll(): Promise<CandidateModel[]> {
-    const result = await this.candidate.find().exec();
-    return result.map((item) => this.toModel(item));
-  }
-
   async register(
     userId: string,
     data: CreateCandidateData,
@@ -65,6 +60,39 @@ export class CandidatesService {
           'you have already register as a candidate with this account',
         );
       }
+      throw new GraphQLError('internal server error');
+    }
+  }
+
+  async edit(
+    userId: string,
+    data: CreateCandidateData,
+  ): Promise<CandidateModel> {
+    try {
+      const result = await this.candidate
+        .findOneAndUpdate(
+          { owner: userId },
+          {
+            fullname: data.fullname,
+            nickname: data.nickname,
+            contactInfo: data.contactInfo,
+            information: data.information,
+          },
+        )
+        .exec();
+
+      if (result === null) {
+        throw new GraphQLError('you did not registered as a candidate yet');
+      }
+
+      return {
+        id: result._id.toString(),
+        fullname: data.fullname,
+        nickname: data.nickname,
+        contactInfo: data.contactInfo,
+        information: data.information,
+      };
+    } catch (err) {
       throw new GraphQLError('internal server error');
     }
   }

@@ -42,10 +42,8 @@ export class CompaniesResolver {
 
   @Company()
   @Query(() => CompanyModel)
-  async companyUndercare(
-    @Context() ctx: GraphQLContext,
-  ): Promise<CompanyModel> {
-    return this.companiesService.getUndercare(ctx.req.user.sub);
+  async companyProfile(@Context() ctx: GraphQLContext): Promise<CompanyModel> {
+    return this.companiesService.getProfile(ctx.req.user.sub);
   }
 
   @Company()
@@ -65,11 +63,5 @@ export class CompaniesResolver {
     data: CreateCompanyData,
   ): Promise<CompanyModel> {
     return this.companiesService.edit(ctx.req.user.sub, data);
-  }
-
-  @Company()
-  @Mutation(() => CompanyModel)
-  async deleteCompany(@Context() ctx: GraphQLContext): Promise<CompanyModel> {
-    return this.companiesService.delete(ctx.req.user.sub);
   }
 }

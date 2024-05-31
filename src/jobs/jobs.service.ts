@@ -56,7 +56,7 @@ export class JobsService {
     userId: string,
     { title, description, isOpen }: CreateJobBody,
   ): Promise<JobModel> {
-    const company = await this.companiesService.getUndercare(userId);
+    const company = await this.companiesService.getProfile(userId);
 
     try {
       const job = new this.job({
@@ -106,7 +106,7 @@ export class JobsService {
     }
 
     const hasPermission = await this.companiesService.checkPermission(
-      result._id.toString(),
+      result.company,
       userId,
     );
     if (!hasPermission) {
@@ -116,7 +116,9 @@ export class JobsService {
     }
 
     try {
-      await this.job.updateOne({ isOpen: !result.isOpen }).exec();
+      await this.job
+        .updateOne({ _id: jobId }, { isOpen: !result.isOpen })
+        .exec();
       return {
         id: result._id.toString(),
         title: result.title,

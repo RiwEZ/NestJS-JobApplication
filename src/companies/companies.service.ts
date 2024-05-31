@@ -25,7 +25,7 @@ export class CompaniesService {
     return result.map((item) => this.toModel(item));
   }
 
-  async getUndercare(userId: string): Promise<CompanyModel> {
+  async getProfile(userId: string): Promise<CompanyModel> {
     const result = await this.company.findOne({ owner: userId }).exec();
 
     if (result === null) {
@@ -72,26 +72,6 @@ export class CompaniesService {
         );
       }
       throw new GraphQLError('internal server error');
-    }
-  }
-
-  async delete(id: string): Promise<CompanyModel> {
-    try {
-      const result = await this.company.findOneAndDelete({ _id: id }).exec();
-
-      if (result === null) {
-        throw new GraphQLError(
-          `cannot find a company with an id ${id} that you have permission to delete`,
-        );
-      }
-      return {
-        id: result._id.toString(),
-        name: result.name,
-        description: result.description,
-        contactInfo: result.contactInfo,
-      };
-    } catch {
-      throw new GraphQLError(`internal server error`);
     }
   }
 

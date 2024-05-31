@@ -29,7 +29,7 @@ export class ApplicantsService {
   }
 
   async get(userId: string, jobId: string): Promise<ApplicantModel[]> {
-    const userCompany = await this.companiesService.getUndercare(userId);
+    const userCompany = await this.companiesService.getProfile(userId);
     const jobCompany = await this.jobsService.getCompanyOf(jobId);
     if (userCompany.id !== jobCompany.id) {
       throw new GraphQLError(
@@ -40,6 +40,14 @@ export class ApplicantsService {
     return result.map((item) => this.toModel(item));
   }
 
+  async getFromCandidate(userId: string): Promise<ApplicantModel[]> {
+    const candidate = await this.candidatesService.getByUserId(userId);
+    const result = await this.applicant
+      .find({ candidate: candidate.id })
+      .exec();
+    return result.map(this.toModel);
+  }
+
   async getCandidate(id: string): Promise<CandidateModel> {
     const result = await this.applicant.findOne({ _id: id }).exec();
     return this.candidatesService.get(result.candidate);
@@ -48,7 +56,11 @@ export class ApplicantsService {
   async create(userId: string, jobId: string): Promise<ApplicantModel> {
     // check if candidate & job exist or not
     const candidate = await this.candidatesService.getByUserId(userId);
-    await this.jobsService.get(jobId);
+    const job = await this.jobsService.get(jobId);
+
+    if (job.isOpen === false) {
+      throw new GraphQLError('This job is currently closed');
+    }
 
     try {
       const applicant = new this.applicant({

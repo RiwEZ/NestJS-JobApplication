@@ -18,3 +18,5 @@ export class Job {
 }
 
 export const JobSchema = SchemaFactory.createForClass(Job);
+
+JobSchema.index({ isOpen: 1 }, { background: true });

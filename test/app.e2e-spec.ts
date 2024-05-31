@@ -36,7 +36,7 @@ async function graphql(
   });
 }
 
-// This is a simple e2e testing that is mostlt covered the happy path.
+// This is a simple e2e testing that is mostly covered the happy path only.
 // And this need to be run in sequential, so it will be slow.
 describe('E2E Testing', () => {
   let app: NestFastifyApplication;
@@ -199,7 +199,6 @@ describe('E2E Testing', () => {
       expect(result.statusCode).toBe(200);
       expect(resultBody.data.createJob).toBeDefined();
       expect(resultBody.data.createJob.id).toBeDefined();
-      jobIds.push(resultBody.data.createJob.id);
     });
   });
 
@@ -251,10 +250,12 @@ describe('E2E Testing', () => {
       expect(resultBody.data.jobs).toBeDefined();
       expect(resultBody.data.jobs[0].id).toBeDefined();
       expect(resultBody.data.jobs.length).toBe(6);
+
+      resultBody.data.jobs.forEach((job: any) => jobIds.push(job.id));
     });
   });
 
-  describe('applyin to a job', () => {
+  describe('applying to a job', () => {
     it('should be able to register as a candidate on candidate account', async () => {
       const result = await graphql(
         app,
@@ -283,7 +284,7 @@ describe('E2E Testing', () => {
       expect(resultBody.data.registerCandidate.id).toBeDefined();
     });
 
-    it('candidate should be able to apply to a job', async () => {
+    it('candidate should be able to apply to #1 job', async () => {
       const result = await graphql(
         app,
         candidateAccessTokens[0],
@@ -305,9 +306,34 @@ describe('E2E Testing', () => {
       expect(resultBody.data.applyTo.id).toBeDefined();
       expect(resultBody.data.applyTo.status).toBe('PENDING');
     });
+
+    it('candidate should be able to apply to #2 job', async () => {
+      const result = await graphql(
+        app,
+        candidateAccessTokens[0],
+        `
+          mutation ApplyTo {
+            applyTo(jobId: "${jobIds[1]}") {
+              id
+              status
+            }
+          }
+        `,
+      );
+
+      const resultBody = JSON.parse(result.body);
+      console.log(resultBody);
+
+      expect(result.statusCode).toBe(200);
+      expect(resultBody.data.applyTo).toBeDefined();
+      expect(resultBody.data.applyTo.id).toBeDefined();
+      expect(resultBody.data.applyTo.status).toBe('PENDING');
+    });
   });
 
   describe('company actions with applicants', () => {
+    const applicantId: string[] = [];
+
     it('company should be able to view applicants list', async () => {
       const result = await graphql(
         app,
@@ -328,6 +354,132 @@ describe('E2E Testing', () => {
       expect(resultBody.data.applicants).toBeDefined();
       expect(resultBody.data.applicants.length).toBe(1);
       expect(resultBody.data.applicants[0].id).toBeDefined();
+
+      resultBody.data.applicants.forEach((applicant: any) =>
+        applicantId.push(applicant.id),
+      );
+    });
+
+    it('company should be able to close a job & candidate should not be able to apply to it', async () => {
+      const toggleResult = await graphql(
+        app,
+        companyAccessTokens[0],
+        `
+          mutation ToggleJobStatus {
+            toggleJobStatus(jobId: "${jobIds[1]}") {
+              id
+              isOpen
+            }
+          }
+        `,
+      );
+      const toggleResultBody = JSON.parse(toggleResult.body);
+      console.log(toggleResultBody);
+
+      expect(toggleResult.statusCode).toBe(200);
+      expect(toggleResultBody.data.toggleJobStatus).toBeDefined();
+      expect(toggleResultBody.data.toggleJobStatus.isOpen).toBe(false);
+
+      const applyResult = await graphql(
+        app,
+        candidateAccessTokens[0],
+        `
+          mutation ApplyTo {
+            applyTo(jobId: "${jobIds[1]}") {
+              id
+              job
+              status
+            }
+          }
+        `,
+      );
+
+      const applyResultBody = JSON.parse(applyResult.body);
+      console.log(applyResultBody);
+
+      expect(applyResult.statusCode).toBe(200);
+      expect(applyResultBody.data).toBeNull();
+      expect(applyResultBody.errors).toBeDefined();
+    });
+
+    it('company should be able to reject an applicant', async () => {
+      const result = await graphql(
+        app,
+        companyAccessTokens[0],
+        `
+          mutation Reject {
+            reject(id: "${applicantId[0]}") {
+              id
+              job
+            }
+          }
+        `,
+      );
+
+      const resultBody = JSON.parse(result.body);
+      console.log(resultBody);
+
+      expect(result.statusCode).toBe(200);
+      expect(resultBody.data.reject).toBeDefined();
+      expect(resultBody.data.reject.id).toBeDefined();
+    });
+
+    it('company should be able to hire an applicant', async () => {
+      const tempResp = await graphql(
+        app,
+        companyAccessTokens[0],
+        `
+          query Applicants {
+            applicants(jobId: "${jobIds[1]}") {
+              id
+            }
+          }
+        `,
+      );
+      const applicants = JSON.parse(tempResp.body).data.applicants;
+      const result = await graphql(
+        app,
+        companyAccessTokens[0],
+        `
+          mutation Hire {
+            hire(id: "${applicants[0].id}") {
+              id
+              job
+            }
+          }
+        `,
+      );
+
+      const resultBody = JSON.parse(result.body);
+      console.log(resultBody);
+
+      expect(result.statusCode).toBe(200);
+      expect(resultBody.data.hire).toBeDefined();
+      expect(resultBody.data.hire.id).toBeDefined();
+    });
+
+    it('candidate should be able to view status of their applications', async () => {
+      const result = await graphql(
+        app,
+        candidateAccessTokens[0],
+        `
+          query ApplicationStatuses {
+            applicationStatuses {
+              id
+              status
+            }
+          }
+        `,
+      );
+      const resultBody = JSON.parse(result.body);
+      console.log(resultBody);
+
+      expect(result.statusCode).toBe(200);
+      expect(resultBody.data.applicationStatuses).toBeDefined();
+      expect(resultBody.data.applicationStatuses[0].id).toBeDefined();
+      expect(resultBody.data.applicationStatuses[0].status).toBe('REJECTED');
+      expect(resultBody.data.applicationStatuses[1].id).toBeDefined();
+      expect(resultBody.data.applicationStatuses[1].status).toBe('HIRED');
     });
   });
 

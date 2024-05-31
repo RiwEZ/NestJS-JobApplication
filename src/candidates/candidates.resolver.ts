@@ -10,11 +10,6 @@ import { Candidate } from 'src/auth/auth.guard';
 export class CandidatesResolver {
   constructor(private candidatesService: CandidatesService) {}
 
-  @Query(() => [CandidateModel])
-  candidates(): Promise<CandidateModel[]> {
-    return this.candidatesService.getAll();
-  }
-
   @Candidate()
   @Query(() => CandidateModel)
   candidateProfile(@Context() ctx: GraphQLContext): Promise<CandidateModel> {
@@ -28,5 +23,14 @@ export class CandidatesResolver {
     @Args('data') data: CreateCandidateData,
   ): Promise<CandidateModel> {
     return this.candidatesService.register(ctx.req.user.sub, data);
+  }
+
+  @Candidate()
+  @Mutation(() => CandidateModel)
+  editCandidate(
+    @Context() ctx: GraphQLContext,
+    @Args('data') data: CreateCandidateData,
+  ): Promise<CandidateModel> {
+    return this.candidatesService.edit(ctx.req.user.sub, data);
   }
 }

@@ -43,9 +43,9 @@ type Query {
   jobs(isOpen: Boolean! = true): [JobModel!]!
   companies: [CompanyModel!]!
   company(name: String!): CompanyModel!
-  companyUndercare: CompanyModel!
+  companyProfile: CompanyModel!
   applicants(jobId: String!): [ApplicantModel!]!
-  candidates: [CandidateModel!]!
+  applicationStatuses: [ApplicantModel!]!
   candidateProfile: CandidateModel!
 }
 
@@ -55,11 +55,11 @@ type Mutation {
   toggleJobStatus(jobId: String!): JobModel!
   registerCompany(data: CreateCompanyData!): CompanyModel!
   editCompany(data: CreateCompanyData!): CompanyModel!
-  deleteCompany: CompanyModel!
   hire(id: String!): ApplicantModel!
   reject(id: String!): ApplicantModel!
   applyTo(jobId: String!): ApplicantModel!
   registerCandidate(data: CreateCandidateData!): CandidateModel!
+  editCandidate(data: CreateCandidateData!): CandidateModel!
 }
 
 input CreateJobBody {

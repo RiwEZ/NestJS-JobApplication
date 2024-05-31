@@ -55,4 +55,12 @@ export class ApplicantsResolver {
   ): Promise<ApplicantModel> {
     return this.applicantsService.create(ctx.req.user.sub, jobId);
   }
+
+  @Candidate()
+  @Query(() => [ApplicantModel])
+  applicationStatuses(
+    @Context() ctx: GraphQLContext,
+  ): Promise<ApplicantModel[]> {
+    return this.applicantsService.getFromCandidate(ctx.req.user.sub);
+  }
 }
