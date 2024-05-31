@@ -33,6 +33,10 @@ $ pnpm install
 ```
 
 ## Running the app
+```bash
+# start the local mongodb first, make sure you have docker running
+docker compose up -d
+```
 
 ```bash
 # development

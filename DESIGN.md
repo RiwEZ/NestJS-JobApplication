@@ -27,7 +27,10 @@ collection. (but if we want to, we can do it and reduce the database query)
 For the database schema you can checkout each module `.schema.ts` file for full details.
 
 And lastly, I also write a simple e2e test on the test folder, you can check it out to know 
-how the whole thing work from there.
+how the whole thing work from there. And if you want to try using it after the e2e test is finished,
+remove the `docker compose down` from `package.json` `test:e2e` script to make the MongoDB still up
+and run `pnpm start` after that to interact with the app with some data.
+
 
 ## Applicant flow
 1. Register as a user through `/auth/register` with body
